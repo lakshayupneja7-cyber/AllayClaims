@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.allaymc'
-version = '1.2.1'
+version = '1.2.2'
 
 repositories {
     mavenCentral()
@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    compileOnly 'me.clip:placeholderapi:2.11.6'
     implementation 'org.xerial:sqlite-jdbc:3.46.1.3'
 }
 
