@@ -9,6 +9,7 @@ import com.allaymc.landclaimremastered.listeners.GuiListener;
 import com.allaymc.landclaimremastered.listeners.PlayerListener;
 import com.allaymc.landclaimremastered.perks.PerkRegistry;
 import com.allaymc.landclaimremastered.perks.PerkService;
+import com.allaymc.landclaimremastered.placeholders.AllayClaimsExpansion;
 import com.allaymc.landclaimremastered.service.ClaimProfileService;
 import com.allaymc.landclaimremastered.service.PlayerProgressService;
 import com.allaymc.landclaimremastered.service.TierService;
@@ -34,7 +35,9 @@ public final class AllayClaimsPlugin extends JavaPlugin {
     private PerkService perkService;
     private GuiManager guiManager;
 
-    public static AllayClaimsPlugin get() { return instance; }
+    public static AllayClaimsPlugin get() {
+        return instance;
+    }
 
     @Override
     public void onEnable() {
@@ -46,32 +49,58 @@ public final class AllayClaimsPlugin extends JavaPlugin {
         this.pluginConfig = new PluginConfig(this);
         this.databaseManager = new DatabaseManager(this, pluginConfig);
         this.databaseManager.start();
+
         this.claimProviderManager = new ClaimProviderManager(this);
         this.claimProviderManager.load();
+
         this.claimProfileRepository = new ClaimProfileRepository(databaseManager);
         this.playerProgressRepository = new PlayerProgressRepository(databaseManager);
         this.tierService = new TierService(pluginConfig);
         this.playerProgressService = new PlayerProgressService(claimProviderManager, tierService, playerProgressRepository);
         this.claimProfileService = new ClaimProfileService(claimProfileRepository);
+
         this.perkRegistry = new PerkRegistry();
         this.perkRegistry.registerDefaults();
-        this.perkService = new PerkService(this, claimProviderManager, claimProfileService, playerProgressService, perkRegistry, pluginConfig);
+
+        this.perkService = new PerkService(
+                this,
+                claimProviderManager,
+                claimProfileService,
+                playerProgressService,
+                perkRegistry,
+                pluginConfig
+        );
+
         this.guiManager = new GuiManager(tierService, perkService, claimProfileService, playerProgressService);
 
-        if (getCommand("allayclaim") != null) getCommand("allayclaim").setExecutor(new ClaimCommand(this));
-        if (getCommand("claimadmin") != null) getCommand("claimadmin").setExecutor(new ClaimAdminCommand(this));
+        if (getCommand("allayclaim") != null) {
+            getCommand("allayclaim").setExecutor(new ClaimCommand(this));
+        }
+        if (getCommand("claimadmin") != null) {
+            getCommand("claimadmin").setExecutor(new ClaimAdminCommand(this));
+        }
 
         Bukkit.getPluginManager().registerEvents(new GuiListener(this), this);
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
 
         long refresh = pluginConfig.perkRefreshTicks();
         Bukkit.getScheduler().runTaskTimer(this, () -> Bukkit.getOnlinePlayers().forEach(perkService::refreshPerk), refresh, refresh);
-        getLogger().info("AllayMc Land Claim Remastered 1.2.1 enabled.");
+
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            new AllayClaimsExpansion(this).register();
+            getLogger().info("Registered PlaceholderAPI expansion.");
+        } else {
+            getLogger().info("PlaceholderAPI not found. Scoreboard placeholders are disabled.");
+        }
+
+        getLogger().info("AllayMc Land Claim Remastered 1.2.2 enabled.");
     }
 
     @Override
     public void onDisable() {
-        if (databaseManager != null) databaseManager.shutdown();
+        if (databaseManager != null) {
+            databaseManager.shutdown();
+        }
     }
 
     private void saveResourceIfMissing(String name) {
@@ -80,15 +109,47 @@ public final class AllayClaimsPlugin extends JavaPlugin {
         }
     }
 
-    public PluginConfig getPluginConfig() { return pluginConfig; }
-    public DatabaseManager getDatabaseManager() { return databaseManager; }
-    public ClaimProviderManager getClaimProviderManager() { return claimProviderManager; }
-    public ClaimProfileRepository getClaimProfileRepository() { return claimProfileRepository; }
-    public PlayerProgressRepository getPlayerProgressRepository() { return playerProgressRepository; }
-    public TierService getTierService() { return tierService; }
-    public PlayerProgressService getPlayerProgressService() { return playerProgressService; }
-    public ClaimProfileService getClaimProfileService() { return claimProfileService; }
-    public PerkRegistry getPerkRegistry() { return perkRegistry; }
-    public PerkService getPerkService() { return perkService; }
-    public GuiManager getGuiManager() { return guiManager; }
+    public PluginConfig getPluginConfig() {
+        return pluginConfig;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    public ClaimProviderManager getClaimProviderManager() {
+        return claimProviderManager;
+    }
+
+    public ClaimProfileRepository getClaimProfileRepository() {
+        return claimProfileRepository;
+    }
+
+    public PlayerProgressRepository getPlayerProgressRepository() {
+        return playerProgressRepository;
+    }
+
+    public TierService getTierService() {
+        return tierService;
+    }
+
+    public PlayerProgressService getPlayerProgressService() {
+        return playerProgressService;
+    }
+
+    public ClaimProfileService getClaimProfileService() {
+        return claimProfileService;
+    }
+
+    public PerkRegistry getPerkRegistry() {
+        return perkRegistry;
+    }
+
+    public PerkService getPerkService() {
+        return perkService;
+    }
+
+    public GuiManager getGuiManager() {
+        return guiManager;
+    }
 }
